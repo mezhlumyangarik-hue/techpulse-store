@@ -10,6 +10,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
 
+with app.app_context():
+    db.create_all()
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))

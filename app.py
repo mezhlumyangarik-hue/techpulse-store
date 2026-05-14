@@ -10,9 +10,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
 
-with app.app_context():
-    db.create_all()
-
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -21,6 +18,9 @@ class Product(db.Model):
     img_main = db.Column(db.String(255))
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
+
+with app.app_context():
+    db.create_all()
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},

@@ -19,8 +19,12 @@ class Product(db.Model):
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
 
+# Սա ստեղծում է տվյալների բազան և նկարների պանակը
 with app.app_context():
     db.create_all()
+    # Եթե static/uploads պանակը չկա, այն կստեղծվի ավտոմատ
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},

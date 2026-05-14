@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+<div style="padding: 40px 5%;">
+    <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 50px; border-bottom: 1px solid #e5e5e5; padding-bottom: 15px;">
+        <a href="/shop" class="cat-link {% if not current_cat %}active{% endif %}">All</a>
+        <a href="/shop?cat=Mobile" class="cat-link {% if current_cat=='Mobile' %}active{% endif %}">Mobile</a>
+        <a href="/shop?cat=iPad" class="cat-link {% if current_cat=='iPad' %}active{% endif %}">iPad</a>
+        <a href="/shop?cat=Watch" class="cat-link {% if current_cat=='Watch' %}active{% endif %}">Watch</a>
+        <a href="/shop?cat=Accessories" class="cat-link {% if current_cat=='Accessories' %}active{% endif %}">Accessories</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;">
+        {% for p in products %}
+        <div class="product-card" style="background: #fff; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.02); transition: all 0.4s ease;">
+            
+            <img src="/static/uploads/{{ p.img_main }}" style="width: 100%; height: 220px; object-fit: contain;">
+            
+            <h3 style="margin: 15px 0; font-weight: 600;">{{ p.name }}</h3>
+            
+            <p style="color: #0071e3; font-weight: bold; font-size: 20px;">${{ p.price }}</p>
+            
+            <a href="/product/{{ p.id }}" style="color: #0066cc; text-decoration: none; display: block; margin-bottom: 15px;">{{ t.more }} →</a>
+            
+            <form action="/add_to_cart" method="POST">
+                <input type="hidden" name="name" value="{{ p.name }}">
+                <input type="hidden" name="price" value="{{ p.price }}">
+                <input type="hidden" name="img" value="{{ p.img_main }}">
+                
+                <button type="submit" class="btn-buy" style="border:none; padding:12px; width:100%; cursor:pointer; font-weight: 600;">
+                    {{ t.add }}
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    /* Կատեգորիաների սիրունացում */
+    .cat-link {
+        text-decoration: none;
+        color: #86868b;
+        font-weight: 500;
+        padding-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+    .cat-link:hover { color: #000; }
+    .cat-link.active {
+        color: #000;
+        border-bottom: 2px solid #000;
+    }
+</style>
+{% endblock %}

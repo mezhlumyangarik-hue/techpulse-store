@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechPulse</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M20 50C20 50 30 50 35 35C40 20 50 80 60 50C65 35 80 50 80 50%22 stroke=%22%230071e3%22 stroke-width=%228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 fill=%22none%22/></svg>">
+    
+    <style>
+        body { margin: 0; font-family: -apple-system, sans-serif; background: #fbfbfd; min-height: 100vh; display: flex; flex-direction: column; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 5%; background: #000; color: white; position: sticky; top: 0; z-index: 1000; }
+        .nav-links a { color: white; text-decoration: none; font-size: 14px; margin-left: 20px; opacity: 0.8; }
+        .search-box { background: #1d1d1f; border: 1px solid #333; color: white; padding: 8px 15px; border-radius: 20px; outline: none; }
+        .flag { font-size: 20px; text-decoration: none; margin-left: 10px; }
+        main { flex: 1; }
+        
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+
+        /* Կատեգորիաների սիրուն դիզայնը */
+.categories-nav {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px 0;
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.cat-link {
+    text-decoration: none;
+    color: #86868b;
+    font-size: 14px;
+    font-weight: 500;
+    transition: 0.3s;
+    padding-bottom: 5px;
+    border-bottom: 2px solid transparent;
+}
+
+.cat-link:hover, .cat-link.active {
+    color: #000;
+    border-bottom: 2px solid #0071e3;
+}
+
+/* Հեռախոսների համար */
+@media (max-width: 768px) {
+    .product-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Երկու սյունակ */
+        gap: 15px;
+        padding: 10px;
+    }
+    .product-card img {
+        height: 150px; /* Մի քիչ փոքրացնում ենք նկարը հեռախոսի վրա */
+    }
+    h1 {
+        font-size: 24px; /* Վերնագրերը փոքրացնում ենք */
+    }
+}
+
+nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7); /* Թափանցիկ սև */
+    backdrop-filter: blur(15px);   /* Ապակու էֆեկտը */
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+    </style>
+</head>
+<body>
+    <nav>
+       <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 50C20 50 30 50 35 35C40 20 50 80 60 50C65 35 80 50 80 50" stroke="#0071e3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="85" cy="50" r="5" fill="#fff"/>
+    </svg>
+    <span style="font-size: 22px; font-weight: bold; color: white; margin-left: 10px;">TechPulse</span>
+</a>
+        <form action="/shop" method="GET">
+            <input type="text" name="q" class="search-box" placeholder="Search...">
+        </form>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/shop">Shop</a>
+            <a href="/cart">🛒 Bag ({{ session.get('cart', [])|length }})</a>
+            <a href="/set_language/am" class="flag">🇦🇲</a>
+            <a href="/set_language/en" class="flag">🇺🇸</a>
+            <a href="/set_language/ru" class="flag">🇷🇺</a>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div id="flash-container" style="position: fixed; top: 80px; right: 20px; z-index: 9999;">
+          {% for category, message in messages %}
+            <div style="background: #28a745; color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 10px; font-weight: bold; animation: slideIn 0.5s ease-out;">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="background: #000; padding: 60px 5%; margin-top: 80px; border-top: 1px solid #333; color: #fff;">
+        <div style="max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px;">
+            
+            <div>
+                <h3 style="font-size: 18px; margin-bottom: 20px;">TechPulse</h3>
+                <p style="font-size: 14px; color: #86868b; line-height: 1.6;">
+                    The best place to buy Apple products and premium accessories with official warranty.
+                </p>
+            </div>
+
+            <div>
+                <h4 style="font-size: 14px; text-transform: uppercase; margin-bottom: 20px;">Shop</h4>
+                <ul style="list-style: none; padding: 0; font-size: 14px; line-height: 2.2;">
+                    <li><a href="/shop?cat=Mobile" style="text-decoration: none; color: #86868b;">iPhone</a></li>
+                    <li><a href="/shop?cat=Watch" style="text-decoration: none; color: #86868b;">Apple Watch</a></li>
+                    <li><a href="/shop?cat=Accessories" style="text-decoration: none; color: #86868b;">Accessories</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 style="font-size: 14px; text-transform: uppercase; margin-bottom: 20px;">Support</h4>
+                <p style="font-size: 14px; color: #86868b; line-height: 2;">
+                    Email: support@techpulse.am<br>
+                    Phone: +374 96 787 855<br>
+                    Address: Goris, Armenia
+                </p>
+                <div style="display: flex; gap: 20px; margin-top: 15px; font-size: 20px;">
+                    <a href="#" style="color: #fff; opacity: 0.8;"><i class="fab fa-facebook"></i></a>
+                    <a href="#" style="color: #fff; opacity: 0.8;"><i class="fab fa-instagram"></i></a>
+                    <a href="#" style="color: #fff; opacity: 0.8;"><i class="fab fa-telegram"></i></a>
+                    <a href="#" style="color: #fff; opacity: 0.8;"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="font-size: 14px; text-transform: uppercase; margin-bottom: 20px;">Payments</h4>
+                <div style="display: flex; gap: 15px; align-items: center; font-size: 26px; color: #fff;">
+                    <i class="fab fa-cc-visa"></i>
+                    <i class="fab fa-cc-mastercard"></i>
+                    <i class="fab fa-stripe"></i>
+                </div>
+                <p style="font-size: 12px; color: #86868b; margin-top: 15px;">Secure payments by Stripe</p>
+            </div>
+        </div>
+
+        <div style="max-width: 1100px; margin: 40px auto 0; padding-top: 20px; border-top: 1px solid #333; text-align: center; color: #86868b; font-size: 12px;">
+            &copy; 2026 TechPulse Armenia. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        setTimeout(() => {
+            const fc = document.getElementById('flash-container');
+            if(fc) {
+                fc.style.transition = 'opacity 0.5s ease';
+                fc.style.opacity = '0';
+                setTimeout(() => fc.style.display = 'none', 500);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

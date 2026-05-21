@@ -10,10 +10,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
 
-
-with app.app_context():
-    db.create_all()
-
+# 1. Սկզբից սահմանում ենք Աղյուսակը (Model)
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -22,6 +19,10 @@ class Product(db.Model):
     img_main = db.Column(db.String(255))
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
+
+# 2. Միայն Մոդելից հետո հրամայում ենք Flask-ին ստեղծել այն բազայում
+with app.app_context():
+    db.create_all()
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},
@@ -45,7 +46,6 @@ def login():
             session['admin_logged_in'] = True
             return redirect(url_for('admin_panel'))
     return render_template('login.html')
-
 @app.route('/panel', methods=['GET', 'POST'])
 def admin_panel():
     # Ստուգում ենք՝ արդյոք ադմինը մուտք է գործել

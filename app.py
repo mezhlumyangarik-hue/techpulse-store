@@ -7,6 +7,8 @@ app = Flask(__name__, static_folder='static')
 stripe.api_key = "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlTX9PXe1ynBwKusNS47sd7F2SZclSgPdBBkFJ006QE4b3vh" 
 app.config['SECRET_KEY'] = 'techpulse_v3_fixed'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+with app.app_context():
+    db.create_all()
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
 

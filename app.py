@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__, static_folder='static')
 stripe.api_key = "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlTX9PXe1ynBwKusNS47sd7F2SZclSgPdBBkFJ006QE4b3vh" 
 app.config['SECRET_KEY'] = 'techpulse_v3_fixed'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
@@ -18,13 +18,6 @@ class Product(db.Model):
     img_main = db.Column(db.String(255))
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
-
-# Սա ստեղծում է տվյալների բազան և նկարների պանակը
-with app.app_context():
-    db.create_all()
-    # Եթե static/uploads պանակը չկա, այն կստեղծվի ավտոմատ
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},

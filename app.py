@@ -8,8 +8,11 @@ stripe.api_key = "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlT
 app.config['SECRET_KEY'] = 'techpulse_v3_fixed'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-db = SQLAlchemy(app)
+db = SQLAlchemy(app) 
 
+# Ավտոմատ ստեղծել նկարների թղթապանակը Render-ի վրա, եթե գոյություն չունի
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 # 1. Սկզբից սահմանում ենք Աղյուսակը (Model)
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)

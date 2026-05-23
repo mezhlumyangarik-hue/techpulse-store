@@ -13,7 +13,7 @@
         {% for p in products %}
         <div class="product-card" style="background: #fff; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.02); transition: all 0.4s ease;">
             
-            <img src="{{ product.img_main }}" alt="{{ product.name }}"  style="width: 100%; height: 220px; object-fit: contain;">
+           <img src="{{ p.img_main }}" alt="{{ p.name }}" style="max-width: 100%; object-fit: contain;">
             
             <h3 style="margin: 15px 0; font-weight: 600;">{{ p.name }}</h3>
             

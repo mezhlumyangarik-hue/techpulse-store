@@ -101,6 +101,17 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
 
+@app.route('/admin/delete/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('login'))
+        
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    flash('Ապրանքը հաջողությամբ ջնջվեց։')
+    return redirect(url_for('admin_panel'))
+
 @app.route('/')
 def index():
     p = Product.query.order_by(Product.id.desc()).limit(3).all()

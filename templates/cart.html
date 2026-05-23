@@ -8,7 +8,7 @@
     {% for item in cart %}
     <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d2d2d7; padding: 25px 0;">
         <div style="display: flex; align-items: center; gap: 25px;">
-            <img src="/static/uploads/{{ item.img }}" style="width: 100px; height: 100px; object-fit: contain;">
+           <img src="{{ item.img }}" alt="{{ item.name }}" style="width: 50px; height: 50px; object-fit: contain;">
             <div>
                 <h3 style="margin: 0;">{{ item.name }}</h3>
                 <p style="color: #0071e3; font-weight: 600; margin-top: 5px;">${{ item.price }}</p>

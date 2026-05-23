@@ -139,4 +139,49 @@ def product_detail(id):
 def add_to_cart():
     if 'cart' not in session: session['cart'] = []
     c = list(session['cart'])
-    c.append({'name':request.
+    c.append({'name':request.form.get('name'),'price':float(request.form.get('price')),'img':request.form.get('img')})
+    session['cart'] = c
+    session.modified = True
+    flash("Added to bag!", "success") 
+    return redirect(request.referrer or url_for('cart'))
+
+@app.route('/clear_cart')
+def clear_cart():
+    session.pop('cart', None)
+    session.modified = True
+    return redirect(url_for('cart'))
+
+@app.route('/remove_from_cart/<int:idx>')
+def remove_from_cart(idx):
+    c = list(session.get('cart', []))
+    if 0 <= idx < len(c): c.pop(idx)
+    session['cart'] = c
+    session.modified = True
+    return redirect(url_for('cart'))
+
+@app.route('/cart')
+def cart():
+    c = session.get('cart', [])
+    tot = sum(i['price'] for i in c)
+    return render_template('cart.html', cart=c, total=tot)
+
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    c = session.get('cart', [])
+    items = [{'price_data':{'currency':'usd','product_data':{'name':i['name']},'unit_amount':int(i['price']*100)},'quantity':1} for i in c]
+    s = stripe.checkout.Session.create(payment_method_types=['card'], line_items=items, mode='payment', success_url=url_for('payment_success',_external=True), cancel_url=url_for('cart',_external=True))
+    return redirect(s.url, code=303)
+
+@app.route('/payment_success')
+def payment_success():
+    session.pop('cart', None)
+    return render_template('success.html')
+
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    session['lang'] = lang
+    return redirect(request.referrer or url_for('index'))
+
+if __name__ == "__main__":
+    with app.app_context(): db.create_all()
+    app.run(debug=True, port=5001)

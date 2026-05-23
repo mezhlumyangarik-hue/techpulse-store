@@ -1,5 +1,7 @@
 import os, stripe
-from flask import Flask, render_template, request, redirect, session, url_for, flash # Ավելացրու flash-ը վերևում
+import cloudinary
+import cloudinary.uploader  # Ավելացրինք Cloudinary գրադարանը
+from flask import Flask, render_template, request, redirect, session, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
@@ -10,9 +12,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app) 
 
-# Ավտոմատ ստեղծել նկարների թղթապանակը Render-ի վրա, եթե գոյություն չունի
+# Կարգավորում ենք Cloudinary-ն (Տվյալները վերցրու քո Cloudinary Dashboard-ից)
+cloudinary.config( 
+  cloud_name = "ՔՈ_CLOUD_NAME", 
+  api_key = "ՔՈ_API_KEY", 
+  api_secret = "ՔՈ_API_SECRET",
+  secure = True
+)
+
+# Ավտոմատ ստեղծել նկարների թղթապանակը (տեղային ստուգման համար)
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
+
 # 1. Սկզբից սահմանում ենք Աղյուսակը (Model)
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)

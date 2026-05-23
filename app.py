@@ -1,6 +1,6 @@
 import os, stripe
 import cloudinary
-import cloudinary.uploader  # Ավելացրինք Cloudinary գրադարանը
+import cloudinary.uploader  # Ավելացրինք Cloudinary գրադարանը նկարների համար
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -12,7 +12,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app) 
 
-# Կարգավորում ենք Cloudinary-ն (Տվյալները վերցրու քո Cloudinary Dashboard-ից)
+# Կարգավորում ենք Cloudinary-ն քո տվյալներով
 cloudinary.config( 
   cloud_name = "dguh3cevv", 
   api_key = "475575884566416", 
@@ -20,7 +20,7 @@ cloudinary.config(
   secure = True
 )
 
-# Ավտոմատ ստեղծել նկարների թղթապանակը (տեղային ստուգման համար)
+# Ավտոմատ ստեղծել նկարների թղթապանակը (լոկալ ստուգումների համար)
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
@@ -55,38 +55,38 @@ def inject_globals():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Սա այն գաղտնաբառն է, որով պետք է մտնես
         if request.form.get('password') == "admin123":
             session['admin_logged_in'] = True
             return redirect(url_for('admin_panel'))
     return render_template('login.html')
+
 @app.route('/panel', methods=['GET', 'POST'])
 def admin_panel():
-    # Ստուգում ենք՝ արդյոք ադմինը մուտք է գործել
     if not session.get('admin_logged_in'):
         return redirect(url_for('login'))
         
     if request.method == 'POST':
-        # Ապրանք ավելացնելու կոդը
         file = request.files.get('img_main')
         gallery_files = request.files.getlist('img_gallery')
         
         if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Գլխավոր նկարը ուղարկում ենք Cloudinary
+            upload_result = cloudinary.uploader.upload(file)
+            main_image_url = upload_result['secure_url']
             
-            # Gallery նկարները պահում ենք ստորակետով բաժանված
-            gal_names = [secure_filename(g.filename) for g in gallery_files if g.filename]
+            # Պատկերասրահի (Gallery) նկարները ուղարկում ենք Cloudinary
+            gal_urls = []
             for g in gallery_files:
                 if g.filename:
-                    g.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(g.filename)))
+                    g_upload_result = cloudinary.uploader.upload(g)
+                    gal_urls.append(g_upload_result['secure_url'])
             
             new_p = Product(
                 name=request.form.get('name'),
                 price=float(request.form.get('price')),
                 category=request.form.get('category'),
-                img_main=filename,
-                img_gallery=",".join(gal_names),
+                img_main=main_image_url,                     # Պահում ենք Cloudinary-ի հղումը
+                img_gallery=",".join(gal_urls),              # Ստորակետով բաժանված հղումներ
                 description=request.form.get('description')
             )
             db.session.add(new_p)
@@ -112,6 +112,9 @@ def delete_product(product_id):
     flash('Ապրանքը հաջողությամբ ջնջվեց։')
     return redirect(url_for('admin_panel'))
 
+
+# --- USER FRONTEND LOGICS ---
+
 @app.route('/')
 def index():
     p = Product.query.order_by(Product.id.desc()).limit(3).all()
@@ -125,10 +128,10 @@ def shop():
     if q: prods = prods.filter(Product.name.contains(q))
     if cat: prods = prods.filter_by(category=cat)
     return render_template('shop.html', products=prods.all(), current_cat=cat)
+
 @app.route('/product/<int:id>')
 def product_detail(id):
     p = Product.query.get_or_404(id)
-    # Այստեղ ստուգում ենք՝ արդյոք gallery-ն դատարկ չէ, նոր բաժանում ենք
     g = p.img_gallery.split(',') if (p.img_gallery and p.img_gallery.strip()) else []
     return render_template('product_detail.html', product=p, gallery=g)
 
@@ -136,52 +139,4 @@ def product_detail(id):
 def add_to_cart():
     if 'cart' not in session: session['cart'] = []
     c = list(session['cart'])
-    c.append({'name':request.form.get('name'),'price':float(request.form.get('price')),'img':request.form.get('img')})
-    session['cart'] = c
-    session.modified = True
-    
-    # Ավելացնում ենք ծանուցումը
-    flash("Added to bag!", "success") 
-    
-    return redirect(request.referrer or url_for('cart'))
-
-@app.route('/clear_cart')
-def clear_cart():
-    session.pop('cart', None)
-    session.modified = True
-    return redirect(url_for('cart'))
-
-@app.route('/remove_from_cart/<int:idx>')
-def remove_from_cart(idx):
-    c = list(session.get('cart', []))
-    if 0 <= idx < len(c): c.pop(idx)
-    session['cart'] = c
-    session.modified = True
-    return redirect(url_for('cart'))
-
-@app.route('/cart')
-def cart():
-    c = session.get('cart', [])
-    tot = sum(i['price'] for i in c)
-    return render_template('cart.html', cart=c, total=tot)
-
-@app.route('/create-checkout-session', methods=['POST'])
-def create_checkout_session():
-    c = session.get('cart', [])
-    items = [{'price_data':{'currency':'usd','product_data':{'name':i['name']},'unit_amount':int(i['price']*100)},'quantity':1} for i in c]
-    s = stripe.checkout.Session.create(payment_method_types=['card'], line_items=items, mode='payment', success_url=url_for('payment_success',_external=True), cancel_url=url_for('cart',_external=True))
-    return redirect(s.url, code=303)
-
-@app.route('/payment_success')
-def payment_success():
-    session.pop('cart', None)
-    return render_template('success.html')
-
-@app.route('/set_language/<lang>')
-def set_language(lang):
-    session['lang'] = lang
-    return redirect(request.referrer or url_for('index'))
-
-if __name__ == "__main__":
-    with app.app_context(): db.create_all()
-    app.run(debug=True, port=5001)
+    c.append({'name':request.

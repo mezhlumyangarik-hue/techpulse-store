@@ -14,9 +14,9 @@ db = SQLAlchemy(app)
 
 # Կարգավորում ենք Cloudinary-ն (Տվյալները վերցրու քո Cloudinary Dashboard-ից)
 cloudinary.config( 
-  cloud_name = "ՔՈ_CLOUD_NAME", 
-  api_key = "ՔՈ_API_KEY", 
-  api_secret = "ՔՈ_API_SECRET",
+  cloud_name = "dguh3cevv", 
+  api_key = "475575884566416", 
+  api_secret = "maxXk_8VH9_axbaY0tIQCd8KSOQ",
   secure = True
 )
 

@@ -6,7 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='static')
-app.wsgi_app = app
+app.wsgi_app = app # Պարտադիր է Vercel-ի համար
+
 stripe.api_key = "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlTX9PXe1ynBwKusNS47sd7F2SZclSgPdBBkFJ006QE4b3vh" 
 app.config['SECRET_KEY'] = 'techpulse_v3_fixed'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
@@ -21,8 +22,8 @@ cloudinary.config(
   secure = True
 )
 
-# Ավտոմատ ստեղծել նկարների թղթապանակը (լոկալ ստուգումների համար)
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
+# Ավտոմատ ստեղծել նկարների թղթապանակը (միայն լոկալ ստուգումների համար)
+if not os.environ.get('VERCEL') and not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
 # 1. Սկզբից սահմանում ենք Աղյուսակը (Model)
@@ -35,9 +36,11 @@ class Product(db.Model):
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
 
-# 2. Միայն Մոդելից հետո հրամայում ենք Flask-ին ստեղծել այն բազայում
-with app.app_context():
-    db.create_all()
+# 2. Բազայի ավտոմատ ստեղծումը կատարում ենք ՄԻԱՅՆ լոկալ համակարգչի վրա
+# Vercel-ի վրա սա չի աշխատի և չի կախի սերվերը
+if not os.environ.get('VERCEL'):
+    with app.app_context():
+        db.create_all()
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},
@@ -184,5 +187,6 @@ def set_language(lang):
     return redirect(request.referrer or url_for('index'))
 
 if __name__ == "__main__":
-    with app.app_context(): db.create_all()
+    if not os.environ.get('VERCEL'):
+        with app.app_context(): db.create_all()
     app.run(debug=True, port=5001)

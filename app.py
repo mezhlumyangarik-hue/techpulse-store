@@ -10,10 +10,10 @@ app.wsgi_app = app  # Պարտադիր է Vercel-ի համար
 stripe.api_key = "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlTX9PXe1ynBwKusNS47sd7F2SZclSgPdBBkFJ006QE4b3vh" 
 app.config['SECRET_KEY'] = 'techpulse_v3_fixed'
 
-# ՃԻՇՏ ԿԱՐԳԱՎՈՐՈՒՄ VERCEL-Ի ՀԱՄԱՐ.
-# Եթե կայքն աշխատում է Vercel-ում, բազան ստեղծում ենք /tmp պապկայում, որ սերվերը չկախվի
+# Vercel-ի վրա օգտագործում ենք հիշողության մեջ աշխատող բազա (In-Memory),
+# որպեսզի սերվերը ֆայլ ստեղծելու պատճառով չկախվի
 if os.environ.get('VERCEL'):
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/database.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 
@@ -38,9 +38,11 @@ class Product(db.Model):
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
 
-# ԱՎՏՈՄԱՏ ՍՏԵՂԾՈՒՄ ԵՎ՛ ԼՈԿԱԼ, ԵՎ՛ VERCEL-Ի ՎՐԱ՝ ԱՌԱՆՑ ԿԱԽՎԵԼՈՒ
-with app.app_context():
-    db.create_all()
+# ԲԱԶԱՅԻ ՍՏԵՂԾՈՒՄԸ ԿԱՏԱՐՈՒՄ ԵՆՔ ՄԻԱՅՆ ԼՈԿԱԼ (Համակարգչիդ վրա)
+# Vercel-ի վրա սա ՉԻ ԿԱՆՉՎՈՒՄ, ինչի շնորհիվ սերվերը չի կախվի
+if not os.environ.get('VERCEL'):
+    with app.app_context():
+        db.create_all()
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},
@@ -52,6 +54,7 @@ T = {
 def inject_globals():
     l = session.get('lang', 'am')
     return dict(t=T.get(l, T['am']))
+
 
 # --- ADMIN LOGICS ---
 
@@ -94,10 +97,11 @@ def admin_panel():
             db.session.commit()
             return redirect(url_for('admin_panel'))
             
+    products = []
     try:
         products = Product.query.all()
-    except:
-        products = []
+    except Exception:
+        pass
     return render_template('admin.html', products=products)
 
 @app.route('/logout')
@@ -116,27 +120,30 @@ def delete_product(product_id):
     flash('Ապրանքը հաջողությամբ ջնջվեց։')
     return redirect(url_for('admin_panel'))
 
+
 # --- USER FRONTEND LOGICS ---
 
 @app.route('/')
 def index():
+    p = []
     try:
         p = Product.query.order_by(Product.id.desc()).limit(3).all()
-    except:
-        p = []
+    except Exception:
+        pass
     return render_template('index.html', products=p)
 
 @app.route('/shop')
 def shop():
     cat = request.args.get('cat', '')
     q = request.args.get('q', '')
+    res = []
     try:
         prods = Product.query
         if q: prods = prods.filter(Product.name.contains(q))
         if cat: prods = prods.filter_by(category=cat)
         res = prods.all()
-    except:
-        res = []
+    except Exception:
+        pass
     return render_template('shop.html', products=res, current_cat=cat)
 
 @app.route('/product/<int:id>')

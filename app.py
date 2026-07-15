@@ -5,13 +5,12 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__, static_folder='static')
-app.wsgi_app = app  # Պարտադիր է Vercel-ի համար
 
-stripe.api_key = "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlTX9PXe1ynBwKusNS47sd7F2SZclSgPdBBkFJ006QE4b3vh" 
-app.config['SECRET_KEY'] = 'techpulse_v3_fixed'
+# Բանալիները վերցնում ենք Environment Variables-ից (անվտանգության համար)
+stripe.api_key = os.environ.get("STRIPE_API_KEY", "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlTX9PXe1ynBwKusNS47sd7F2SZclSgPdBBkFJ006QE4b3vh") 
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "techpulse_v3_fixed")
 
-# Vercel-ի վրա օգտագործում ենք հիշողության մեջ աշխատող բազա (In-Memory),
-# որպեսզի սերվերը ֆայլ ստեղծելու պատճառով չկախվի
+# Vercel-ի վրա օգտագործում ենք հիշողության մեջ աշխատող բազա (In-Memory)
 if os.environ.get('VERCEL'):
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 else:
@@ -22,9 +21,9 @@ db = SQLAlchemy(app)
 
 # Կարգավորում ենք Cloudinary-ն
 cloudinary.config( 
-  cloud_name = "dguh3cevv", 
-  api_key = "475575884566416", 
-  api_secret = "maxXk_8VH9_axbaY0tIQCd8KSOQ",
+  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "dguh3cevv"), 
+  api_key = os.environ.get("CLOUDINARY_API_KEY", "475575884566416"), 
+  api_secret = os.environ.get("CLOUDINARY_API_SECRET", "maxXk_8VH9_axbaY0tIQCd8KSOQ"),
   secure = True
 )
 
@@ -38,11 +37,9 @@ class Product(db.Model):
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
 
-# ԲԱԶԱՅԻ ՍՏԵՂԾՈՒՄԸ ԿԱՏԱՐՈՒՄ ԵՆՔ ՄԻԱՅՆ ԼՈԿԱԼ (Համակարգչիդ վրա)
-# Vercel-ի վրա սա ՉԻ ԿԱՆՉՎՈՒՄ, ինչի շնորհիվ սերվերը չի կախվի
-if not os.environ.get('VERCEL'):
-    with app.app_context():
-        db.create_all()
+# Աղյուսակները ավտոմատ ստեղծվում են թե՛ լոկալ, թե՛ Vercel-ի վրա գործարկվելիս
+with app.app_context():
+    db.create_all()
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},

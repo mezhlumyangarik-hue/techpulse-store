@@ -6,11 +6,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__, static_folder='static')
 
-# Բանալիները վերցնում ենք Environment Variables-ից (անվտանգության համար)
 stripe.api_key = os.environ.get("STRIPE_API_KEY", "sk_test_51TRz8s6nZy1YHtdO67ycmmgWxRcBZPy688ULXkB0LaaLJolxPFnlTX9PXe1ynBwKusNS47sd7F2SZclSgPdBBkFJ006QE4b3vh") 
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "techpulse_v3_fixed")
 
-# Vercel-ի վրա օգտագործում ենք հիշողության մեջ աշխատող բազա (In-Memory)
 if os.environ.get('VERCEL'):
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 else:
@@ -19,7 +17,6 @@ else:
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app) 
 
-# Կարգավորում ենք Cloudinary-ն
 cloudinary.config( 
   cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "dguh3cevv"), 
   api_key = os.environ.get("CLOUDINARY_API_KEY", "475575884566416"), 
@@ -27,7 +24,6 @@ cloudinary.config(
   secure = True
 )
 
-# Մոդել (Աղյուսակ)
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -37,93 +33,21 @@ class Product(db.Model):
     img_gallery = db.Column(db.Text)
     description = db.Column(db.Text)
 
-# Մշտական ապրանքների ավելացում դատարկ բազայի դեպքում
-def seed_initial_data():
-    if Product.query.count() == 0:
-        initial_products = [
-            # Phones
-            Product(
-                name="iPhone 15 Pro Max",
-                price=1199.00,
-                category="Phones",
-                img_main="https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800",
-                description="Titanium design, A17 Pro chip, 48MP main camera with multiple focal lengths."
-            ),
-            Product(
-                name="Samsung Galaxy S24 Ultra",
-                price=1299.00,
-                category="Phones",
-                img_main="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800",
-                description="Galaxy AI features, built-in S Pen, 200MP camera, Snapdragon 8 Gen 3."
-            ),
-            Product(
-                name="Google Pixel 8 Pro",
-                price=999.00,
-                category="Phones",
-                img_main="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800",
-                description="Tensor G3 chip, fully upgraded cameras, best-in-class photo editing tools."
-            ),
-            # Laptops
-            Product(
-                name="MacBook Pro 16 M3 Max",
-                price=2499.00,
-                category="Laptops",
-                img_main="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800",
-                description="Extreme performance with M3 Max chip, Liquid Retina XDR display, 22 hours battery."
-            ),
-            Product(
-                name="Dell XPS 15",
-                price=1899.00,
-                category="Laptops",
-                img_main="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=800",
-                description="13th Gen Intel Core i9, NVIDIA RTX graphics, 3.5K OLED touch screen."
-            ),
-            Product(
-                name="ASUS ROG Zephyrus G16",
-                price=1999.00,
-                category="Laptops",
-                img_main="https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=800",
-                description="Ultimate gaming laptop with Intel Core Ultra 9, RTX 4080, and ROG Nebula display."
-            ),
-            # Accessories
-            Product(
-                name="AirPods Pro (2nd Gen)",
-                price=249.00,
-                category="Accessories",
-                img_main="https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?q=80&w=800",
-                description="Up to 2x more Active Noise Cancellation, Adaptive Audio, and USB-C charging."
-            ),
-            Product(
-                name="Apple Watch Ultra 2",
-                price=799.00,
-                category="Accessories",
-                img_main="https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?q=80&w=800",
-                description="Rugged titanium case, dual-frequency GPS, up to 36 hours of battery life."
-            ),
-            Product(
-                name="Sony WH-1000XM5",
-                price=399.00,
-                category="Accessories",
-                img_main="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800",
-                img_gallery="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800",
-                description="Industry-leading noise canceling headphones with crystal clear hands-free calling."
-            )
-        ]
-        db.session.add_all(initial_products)
-        db.session.commit()
+# Մշտական (Fallback) ապրանքներ
+STATIC_PRODUCTS = [
+    Product(id=1, name="iPhone 15 Pro Max", price=1199.00, category="Phones", img_main="https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800", description="Titanium design, A17 Pro chip, 48MP main camera with multiple focal lengths."),
+    Product(id=2, name="Samsung Galaxy S24 Ultra", price=1299.00, category="Phones", img_main="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=800", description="Galaxy AI features, built-in S Pen, 200MP camera, Snapdragon 8 Gen 3."),
+    Product(id=3, name="Google Pixel 8 Pro", price=999.00, category="Phones", img_main="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800", description="Tensor G3 chip, fully upgraded cameras, best-in-class photo editing tools."),
+    Product(id=4, name="MacBook Pro 16 M3 Max", price=2499.00, category="Laptops", img_main="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800", description="Extreme performance with M3 Max chip, Liquid Retina XDR display, 22 hours battery."),
+    Product(id=5, name="Dell XPS 15", price=1899.00, category="Laptops", img_main="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=800", description="13th Gen Intel Core i9, NVIDIA RTX graphics, 3.5K OLED touch screen."),
+    Product(id=6, name="ASUS ROG Zephyrus G16", price=1999.00, category="Laptops", img_main="https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=800", description="Ultimate gaming laptop with Intel Core Ultra 9, RTX 4080, and ROG Nebula display."),
+    Product(id=7, name="AirPods Pro (2nd Gen)", price=249.00, category="Accessories", img_main="https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?q=80&w=800", description="Up to 2x more Active Noise Cancellation, Adaptive Audio, and USB-C charging."),
+    Product(id=8, name="Apple Watch Ultra 2", price=799.00, category="Accessories", img_main="https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?q=80&w=800", description="Rugged titanium case, dual-frequency GPS, up to 36 hours of battery life."),
+    Product(id=9, name="Sony WH-1000XM5", price=399.00, category="Accessories", img_main="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800", img_gallery="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800", description="Industry-leading noise canceling headphones with crystal clear hands-free calling.")
+]
 
-# Աղյուսակները ավտոմատ ստեղծվում են և լցվում
 with app.app_context():
     db.create_all()
-    seed_initial_data()
 
 T = {
     'en': {'home':'Home','shop':'Shop','bag':'Bag','search':'Search...','more':'Learn more','add':'Add to Bag','clear':'Clear Bag'},
@@ -135,7 +59,6 @@ T = {
 def inject_globals():
     l = session.get('lang', 'am')
     return dict(t=T.get(l, T['am']))
-
 
 # --- ADMIN LOGICS ---
 
@@ -178,11 +101,7 @@ def admin_panel():
             db.session.commit()
             return redirect(url_for('admin_panel'))
             
-    products = []
-    try:
-        products = Product.query.all()
-    except Exception:
-        pass
+    products = Product.query.all() or STATIC_PRODUCTS
     return render_template('admin.html', products=products)
 
 @app.route('/logout')
@@ -195,9 +114,10 @@ def delete_product(product_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('login'))
         
-    product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
+    product = Product.query.get(product_id)
+    if product:
+        db.session.delete(product)
+        db.session.commit()
     flash('Ապրանքը հաջողությամբ ջնջվեց։')
     return redirect(url_for('admin_panel'))
 
@@ -211,6 +131,8 @@ def index():
         p = Product.query.order_by(Product.id.desc()).limit(3).all()
     except Exception:
         pass
+    if not p:
+        p = STATIC_PRODUCTS[:3]
     return render_template('index.html', products=p)
 
 @app.route('/shop')
@@ -225,11 +147,21 @@ def shop():
         res = prods.all()
     except Exception:
         pass
+    
+    if not res:
+        res = STATIC_PRODUCTS
+        if cat:
+            res = [x for x in res if x.category.lower() == cat.lower()]
+        if q:
+            res = [x for x in res if q.lower() in x.name.lower()]
+            
     return render_template('shop.html', products=res, current_cat=cat)
 
 @app.route('/product/<int:id>')
 def product_detail(id):
-    p = Product.query.get_or_404(id)
+    p = Product.query.get(id)
+    if not p:
+        p = next((x for x in STATIC_PRODUCTS if x.id == id), STATIC_PRODUCTS[0])
     g = p.img_gallery.split(',') if (p.img_gallery and p.img_gallery.strip()) else []
     return render_template('product_detail.html', product=p, gallery=g)
 
